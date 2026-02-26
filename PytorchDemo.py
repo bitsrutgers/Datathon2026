@@ -1,5 +1,5 @@
-import torch # type: ignore
-import torch.nn as nn # type: ignore
+import torch
+import torch.nn as nn
 import matplotlib.pyplot as plt
 
 # 1. Dataset (Expanded for better visualization)
