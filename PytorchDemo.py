@@ -1,43 +1,52 @@
-# Simple PyTorch demo: learn a line (hours studied -> exam score)
+import torch # type: ignore
+import torch.nn as nn # type: ignore
+import matplotlib.pyplot as plt
 
-import torch
-import torch.nn as nn
+# 1. Dataset (Expanded for better visualization)
+# Training Data: The "History" the AI learns from
+x_train = torch.tensor([[1.0], [2.0], [3.0], [4.0], [5.0], [6.0]])
+y_train = torch.tensor([[60.0], [65.0], [75.0], [82.0], [90.0], [93.0]])
 
-# 1) Fake dataset (small, easy to understand)
-# x = hours studied
-x = torch.tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
-# y = exam score (roughly 10*x + 50, with tiny noise)
-y = torch.tensor([[60.0], [70.0], [79.0], [90.0], [98.0]])
+# Test Data: "Future" points the AI hasn't seen yet
+x_test = torch.tensor([[7.0], [8.0]])
+y_test = torch.tensor([[96.0], [99.0]])
 
-# 2) Define a tiny model: a single linear layer y = w*x + b
-model = nn.Linear(in_features=1, out_features=1)
-
-# 3) Define "how wrong we are" (loss) and how we improve (optimizer)
-loss_fn = nn.MSELoss()  # mean squared error
+# 2. Model, Loss, and Optimizer
+model = nn.Linear(1, 1)
+loss_fn = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-# 4) Training loop
-for epoch in range(1, 501):
-    # Forward pass: predict y from x
-    y_pred = model(x)
-
-    # Compute loss
-    loss = loss_fn(y_pred, y)
-
-    # Backprop: compute gradients
+# 3. Training Loop
+for epoch in range(500):
+    y_pred = model(x_train)
+    loss = loss_fn(y_pred, y_train)
+    
     optimizer.zero_grad()
     loss.backward()
-
-    # Update weights
     optimizer.step()
 
-    # Print progress occasionally
-    if epoch % 100 == 0:
-        w = model.weight.item()
-        b = model.bias.item()
-        print(f"Epoch {epoch:3d} | Loss: {loss.item():.2f} | w: {w:.2f} | b: {b:.2f}")
+# 4. PREDICTION PHASE
+model.eval()
+with torch.no_grad():
+    # Predict for the whole range to draw the line
+    x_range = torch.linspace(0, 10, 100).reshape(-1, 1)
+    predictions = model(x_range)
 
-# 5) Make a simple prediction
-new_hours = torch.tensor([[6.0]])
-pred_score = model(new_hours).item()
-print(f"\nPrediction: If someone studies 6 hours, predicted score ≈ {pred_score:.1f}")
+# 5. VISUALIZATION
+plt.figure(figsize=(10, 6))
+
+# Plot the historical training data
+plt.scatter(x_train, y_train, color='blue', label='Historical Data (Train)')
+
+# Plot the "Future" test data
+plt.scatter(x_test, y_test, color='green', marker='s', label='Unseen Data (Test)')
+
+# Plot the AI's predictive trend line
+plt.plot(x_range, predictions, color='red', linestyle='--', label='AI Predictive Trend')
+
+plt.title('Predictive Analytics: Hours vs. Exam Score')
+plt.xlabel('Hours Studied')
+plt.ylabel('Score')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
